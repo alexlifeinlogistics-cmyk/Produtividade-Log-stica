@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Produtividade 13h</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e29;--border:rgba(255,255,255,0.07);--ok:#00e5a0;--warn:#ffc94d;--danger:#ff6b6b;--blue:#6478c8;--text:#e8eaf0;--muted:#636880;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+header{padding:24px 36px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-icon{width:36px;height:36px;background:var(--ok);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.logo-icon svg{width:18px;height:18px;fill:#0d0f14;}
+.logo h1{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;}
+.logo p{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+.hm{text-align:right;}
+.hm .mes{font-family:'Space Mono',monospace;font-size:10px;color:var(--ok);letter-spacing:2px;}
+.hm .sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.funil{display:flex;align-items:center;justify-content:center;gap:0;padding:12px 36px;background:var(--bg2);border-bottom:1px solid var(--border);}
+.funil-step{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:8px;}
+.funil-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
+.funil-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+.funil-val{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;}
+.funil-arrow{color:var(--muted);font-size:14px;padding:0 2px;}
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);padding:0 36px;}
+.tab{padding:12px 18px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;font-weight:500;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--ok);border-bottom-color:var(--ok);}
+main{padding:24px 36px;}
+.panel{display:none;}.panel.active{display:block;}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--kc,var(--ok)) 0%,transparent 100%);}
+.kpi-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.kpi-val{font-family:'Space Mono',monospace;font-size:28px;font-weight:700;line-height:1;}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:6px;}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;margin-top:5px;}
+.b-ok{background:rgba(0,229,160,.15);color:var(--ok);}
+.b-w{background:rgba(255,107,107,.15);color:var(--danger);}
+.b-m{background:rgba(255,201,77,.15);color:var(--warn);}
+.b-b{background:rgba(100,120,200,.15);color:var(--blue);}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.ct{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:6px 0;}
+.gauge-val{font-family:'Space Mono',monospace;font-size:36px;font-weight:700;color:var(--ok);margin-top:-4px;}
+.gauge-label{font-size:10px;color:var(--muted);margin-top:3px;}
+.gl{display:flex;flex-direction:column;gap:18px;}
+.gh{display:flex;justify-content:space-between;margin-bottom:5px;}
+.gn{font-size:12px;font-weight:500;}
+.gp{font-family:'Space Mono',monospace;font-size:12px;}
+.bt{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.bf{height:100%;border-radius:3px;}
+.gd{font-size:10px;color:var(--muted);margin-top:4px;}
+.rt{width:100%;border-collapse:collapse;}
+.rt th{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 0 8px;border-bottom:1px solid var(--border);}
+.rt td{padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;vertical-align:middle;}
+.rt tr:last-child td{border-bottom:none;}
+.rn{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);width:20px;}
+.bw{display:flex;align-items:center;gap:7px;}
+.mb{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.mf{height:100%;border-radius:2px;}
+.rp{font-family:'Space Mono',monospace;font-size:11px;min-width:40px;text-align:right;}
+.rtot{font-size:10px;color:var(--muted);min-width:44px;text-align:right;}
+.ch{position:relative;}
+.ch-220{height:220px;}
+.ch-300{height:300px;}
+.ch-360{height:360px;}
+.sy{overflow-y:auto;}
+.sy::-webkit-scrollbar{width:3px;}
+.sy::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.ar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:7px;margin-bottom:6px;border-left:3px solid var(--ca,var(--danger));}
+.ad{width:6px;height:6px;border-radius:50%;background:var(--ca,var(--danger));flex-shrink:0;}
+.an{font-size:11px;flex:1;}
+.ap{font-family:'Space Mono',monospace;font-size:12px;}
+.ms-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+.ms{background:var(--bg3);border-radius:7px;padding:10px 12px;}
+.msv{font-family:'Space Mono',monospace;font-size:18px;}
+.msl{font-size:10px;color:var(--muted);margin-top:2px;}
+.funil-panel{display:flex;flex-direction:column;gap:0;margin-bottom:20px;}
+.fp-step{display:flex;align-items:stretch;gap:14px;}
+.fp-left{display:flex;flex-direction:column;align-items:center;width:40px;}
+.fp-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.fp-line{flex:1;width:2px;background:var(--border);margin:4px 0;}
+.fp-body{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:10px;}
+.fp-title{font-size:13px;font-weight:600;margin-bottom:3px;}
+.fp-desc{font-size:11px;color:var(--muted);margin-bottom:8px;}
+.fp-bar-row{display:flex;align-items:center;gap:10px;}
+.fp-bar-bg{flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.fp-bar-fill{height:100%;border-radius:4px;}
+.fp-nums{font-family:'Space Mono',monospace;font-size:12px;min-width:100px;text-align:right;}
+.fp-excl{font-size:10px;color:var(--muted);margin-top:6px;}
+.resultado-box{background:var(--bg2);border:1px solid rgba(0,229,160,.25);border-radius:10px;padding:20px;display:flex;align-items:center;gap:20px;}
+.res-pct{font-family:'Space Mono',monospace;font-size:48px;font-weight:700;color:var(--ok);line-height:1;}
+.res-info .res-title{font-size:14px;font-weight:600;margin-bottom:4px;}
+.res-info .res-sub{font-size:11px;color:var(--muted);}
+.res-meta{display:flex;align-items:center;gap:6px;margin-top:6px;}
+.res-meta-dot{width:7px;height:7px;border-radius:50%;background:var(--warn);}
+.res-meta-txt{font-size:10px;color:var(--muted);}
+.sem-check-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border-radius:8px;margin-bottom:6px;border-left:3px solid var(--blue);}
+.sc-name{font-size:12px;flex:1;}
+.sc-val{font-family:'Space Mono',monospace;font-size:13px;color:var(--blue);}
+
+/* ── EMAIL CORPORATIVO ── */
+.email-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.email-toolbar h2{font-size:13px;font-weight:600;color:var(--text);}
+.toolbar-btns{display:flex;gap:8px;}
+.btn-copy{background:var(--ok);color:#0d0f14;border:none;border-radius:7px;padding:9px 20px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.5px;transition:all .2s;}
+.btn-copy:hover{opacity:.85;}
+.btn-copy.copied{background:var(--warn);color:#0d0f14;}
+.email-preview{background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.08);}
+
+/* Estrutura do email */
+.ep-header{background:#1a2332;padding:28px 36px;display:flex;align-items:center;justify-content:space-between;}
+.ep-logo{display:flex;align-items:center;gap:14px;}
+.ep-logo-box{width:40px;height:40px;background:#00c878;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.ep-logo-box span{color:#1a2332;font-weight:900;font-size:18px;font-family:sans-serif;}
+.ep-logo-text h1{font-family:sans-serif;font-size:14px;font-weight:700;color:#ffffff;letter-spacing:1px;text-transform:uppercase;}
+.ep-logo-text p{font-size:10px;color:#8fa3b8;margin-top:2px;letter-spacing:.5px;}
+.ep-header-right{text-align:right;}
+.ep-header-right .ep-mes{font-size:11px;color:#00c878;font-weight:700;letter-spacing:1px;}
+.ep-header-right .ep-data{font-size:10px;color:#8fa3b8;margin-top:3px;}
+
+.ep-body{padding:32px 36px;background:#f8f9fc;}
+
+/* Bloco resultado hero */
+.ep-hero{background:#1a2332;border-radius:10px;padding:28px 32px;display:flex;align-items:center;gap:32px;margin-bottom:24px;}
+.ep-hero-pct{font-size:56px;font-weight:900;color:#00c878;font-family:sans-serif;line-height:1;}
+.ep-hero-divider{width:2px;height:60px;background:rgba(255,255,255,.1);}
+.ep-hero-info h2{font-size:15px;font-weight:700;color:#ffffff;margin-bottom:6px;font-family:sans-serif;}
+.ep-hero-info p{font-size:12px;color:#8fa3b8;}
+.ep-hero-badges{display:flex;gap:8px;margin-top:12px;}
+.ep-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;font-family:sans-serif;}
+.ep-badge-ok{background:rgba(0,200,120,.15);color:#00c878;border:1px solid rgba(0,200,120,.3);}
+.ep-badge-warn{background:rgba(255,180,0,.15);color:#ffb400;border:1px solid rgba(255,180,0,.3);}
+.ep-badge-info{background:rgba(100,120,200,.15);color:#7090e0;border:1px solid rgba(100,120,200,.3);}
+
+/* Seção título */
+.ep-section{margin-bottom:22px;}
+.ep-section-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#5a7090;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e4e8f0;font-family:sans-serif;}
+
+/* KPI grid 4 cols */
+.ep-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+.ep-kpi{background:#ffffff;border-radius:8px;padding:16px;border-top:3px solid var(--ep-c,#00c878);box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.ep-kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#8fa3b8;margin-bottom:8px;font-family:sans-serif;}
+.ep-kpi-val{font-size:22px;font-weight:900;color:#1a2332;font-family:sans-serif;line-height:1;}
+.ep-kpi-sub{font-size:10px;color:#8fa3b8;margin-top:5px;font-family:sans-serif;}
+
+/* Gestores */
+.ep-gestores{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;}
+.ep-gest{background:#ffffff;border-radius:8px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.ep-gest-nome{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#8fa3b8;margin-bottom:6px;font-family:sans-serif;}
+.ep-gest-pct{font-size:26px;font-weight:900;font-family:sans-serif;line-height:1;}
+.ep-gest-det{font-size:10px;color:#8fa3b8;margin-top:4px;font-family:sans-serif;}
+.ep-gest-bar{height:4px;border-radius:2px;margin-top:10px;background:#e4e8f0;overflow:hidden;}
+.ep-gest-bar-fill{height:100%;border-radius:2px;}
+
+/* Charts area dentro do email */
+.ep-charts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;}
+.ep-chart-box{background:#ffffff;border-radius:8px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.ep-chart-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#8fa3b8;margin-bottom:12px;font-family:sans-serif;}
+.ep-chart-wrap{height:180px;position:relative;}
+
+/* Tabelas do email */
+.ep-table{width:100%;border-collapse:collapse;font-family:sans-serif;}
+.ep-table th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#8fa3b8;text-align:left;padding:0 0 8px;border-bottom:2px solid #e4e8f0;}
+.ep-table td{padding:8px 0;border-bottom:1px solid #f0f2f6;font-size:11px;color:#1a2332;vertical-align:middle;}
+.ep-table tr:last-child td{border-bottom:none;}
+.ep-pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.ep-pill-ok{background:#e6faf3;color:#00915a;}
+.ep-pill-warn{background:#fff8e6;color:#b07800;}
+.ep-pill-bad{background:#fef0f0;color:#c0392b;}
+.ep-bar-row{display:flex;align-items:center;gap:8px;}
+.ep-bar-bg{flex:1;height:5px;background:#e4e8f0;border-radius:3px;overflow:hidden;}
+.ep-bar-fill{height:100%;border-radius:3px;}
+.ep-pct-val{font-size:11px;font-weight:700;min-width:38px;text-align:right;}
+
+/* Alerta sem check */
+.ep-alert-box{background:#fff8f0;border:1px solid #ffd0a0;border-radius:8px;padding:16px;margin-bottom:22px;}
+.ep-alert-title{font-size:11px;font-weight:700;color:#c0580a;margin-bottom:10px;font-family:sans-serif;}
+.ep-alert-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ffe8cc;font-family:sans-serif;}
+.ep-alert-row:last-child{border-bottom:none;}
+.ep-alert-name{font-size:11px;color:#1a2332;}
+.ep-alert-n{font-size:11px;font-weight:700;color:#c0580a;}
+
+/* Rodapé email */
+.ep-footer{background:#1a2332;padding:20px 36px;display:flex;align-items:center;justify-content:space-between;}
+.ep-footer p{font-size:10px;color:#5a7090;font-family:sans-serif;}
+.ep-footer-meta{text-align:right;}
+
+@media(max-width:860px){main,header,.tabs,.funil{padding-left:16px;padding-right:16px;}.kpi-grid{grid-template-columns:1fr 1fr;}.grid-2,.ep-kpi-grid,.ep-gestores,.ep-charts{grid-template-columns:1fr;}.funil{flex-wrap:wrap;gap:6px;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div><h1>Produtividade Logística</h1><p>ENTREGAS ATÉ 13H · MARÇO 2026</p></div>
+  </div>
+  <div class="hm">
+    <div class="mes">MARÇO / 2026 · META: 60%</div>
+    <div class="sub">Lógica: Rota válida → Check-In/Out → Hora ≤ 13h</div>
+  </div>
+</header>
+<div class="funil">
+  <div class="funil-step">
+    <div class="funil-num" style="background:rgba(100,120,200,.2);color:var(--blue)">1</div>
+    <div><div class="funil-label">Rota válida</div><div class="funil-val" style="color:var(--blue)">10.293</div></div>
+  </div>
+  <div class="funil-arrow">→</div>
+  <div class="funil-step">
+    <div class="funil-num" style="background:rgba(255,201,77,.2);color:var(--warn)">2</div>
+    <div><div class="funil-label">Check-In + Out</div><div class="funil-val" style="color:var(--warn)">9.808</div></div>
+  </div>
+  <div class="funil-arrow">→</div>
+  <div class="funil-step">
+    <div class="funil-num" style="background:rgba(0,229,160,.2);color:var(--ok)">3</div>
+    <div><div class="funil-label">Até 13h</div><div class="funil-val" style="color:var(--ok)">7.340</div></div>
+  </div>
+  <div class="funil-arrow">=</div>
+  <div class="funil-step" style="background:rgba(0,229,160,.08);border-radius:8px;padding:7px 14px;">
+    <div><div class="funil-label">Produtividade</div><div class="funil-val" style="color:var(--ok);font-size:18px;">74,8%</div></div>
+  </div>
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('geral',this)">Visão Geral</div>
+  <div class="tab" onclick="showTab('funil',this)">Funil</div>
+  <div class="tab" onclick="showTab('gestores',this)">Gestores</div>
+  <div class="tab" onclick="showTab('diario',this)">Evolução Diária</div>
+  <div class="tab" onclick="showTab('ranking',this)">Rankings</div>
+  <div class="tab" onclick="showTab('transp',this)">Transportadores</div>
+  <div class="tab" onclick="showTab('email',this)">📊 Relatório Executivo</div>
+</div>
+<main>
+
+<!-- GERAL -->
+<div class="panel active" id="p-geral">
+  <div class="kpi-grid">
+    <div class="kpi" style="--kc:var(--ok)"><div class="kpi-label">% Produtividade geral</div><div class="kpi-val" style="color:var(--ok)">74,8%</div><span class="badge b-ok">+14,8pp acima da meta</span><div class="kpi-sub">Meta: 60%</div></div>
+    <div class="kpi" style="--kc:var(--ok)"><div class="kpi-label">Entregas até 13h</div><div class="kpi-val">7.340</div><div class="kpi-sub">de 9.808 com processo completo</div></div>
+    <div class="kpi" style="--kc:var(--danger)"><div class="kpi-label">Fora do prazo</div><div class="kpi-val" style="color:var(--danger)">2.468</div><span class="badge b-w">25,2% do denominador</span></div>
+    <div class="kpi" style="--kc:var(--blue)"><div class="kpi-label">Sem check completo</div><div class="kpi-val" style="color:var(--blue)">485</div><span class="badge b-b">Fora do cálculo</span></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="ct">Produtividade geral</div>
+      <div class="gauge-wrap">
+        <svg width="180" height="100" viewBox="0 0 180 100">
+          <path d="M18 90 A72 72 0 0 1 162 90" fill="none" stroke="#1a1e29" stroke-width="13" stroke-linecap="round"/>
+          <path d="M18 90 A72 72 0 0 1 162 90" fill="none" stroke="#00e5a0" stroke-width="13" stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="57"/>
+          <g transform="rotate(-54 90 90)"><line x1="90" y1="18" x2="90" y2="30" stroke="#ffc94d" stroke-width="2"/></g>
+          <text x="22" y="99" fill="#636880" font-size="8" font-family="Space Mono">0%</text>
+          <text x="143" y="99" fill="#636880" font-size="8" font-family="Space Mono">100%</text>
+          <text x="48" y="40" fill="#ffc94d" font-size="7" font-family="Space Mono">60%</text>
+        </svg>
+        <div class="gauge-val">74,8%</div>
+        <div class="gauge-label">Acima da meta de 60%</div>
+      </div>
+      <div class="ms-grid">
+        <div class="ms"><div class="msv" style="color:var(--ok)">76,8%</div><div class="msl">Marcos</div></div>
+        <div class="ms"><div class="msv" style="color:var(--ok)">76,5%</div><div class="msl">Terres</div></div>
+        <div class="ms"><div class="msv" style="color:var(--warn)">70,0%</div><div class="msl">Aury</div></div>
+        <div class="ms"><div class="msv" style="color:var(--muted)">60,0%</div><div class="msl">Meta</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Alertas críticos</div>
+      <div class="sy" style="max-height:320px">
+        <div class="ar" style="--ca:var(--danger)"><div class="ad"></div><div class="an">Bagé (2 dias) — rota</div><div class="ap" style="color:var(--danger)">41,8%</div></div>
+        <div class="ar" style="--ca:var(--danger)"><div class="ad"></div><div class="an">POA Rota Noturna — rota</div><div class="ap" style="color:var(--danger)">31,2%</div></div>
+        <div class="ar" style="--ca:var(--danger)"><div class="ad"></div><div class="an">Caxias I — rota</div><div class="ap" style="color:var(--danger)">34,1%</div></div>
+        <div class="ar" style="--ca:var(--danger)"><div class="ad"></div><div class="an">Vettore — transportador</div><div class="ap" style="color:var(--danger)">37,0%</div></div>
+        <div class="ar" style="--ca:var(--danger)"><div class="ad"></div><div class="an">DAVI NUNES DA SILVA — motorista</div><div class="ap" style="color:var(--danger)">25,0%</div></div>
+        <div class="ar" style="--ca:var(--danger)"><div class="ad"></div><div class="an">CRISTIANO M. MATHIAS — motorista</div><div class="ap" style="color:var(--danger)">31,9%</div></div>
+        <div class="ar" style="--ca:var(--warn)"><div class="ad"></div><div class="an">Jair — transportador</div><div class="ap" style="color:var(--warn)">51,4%</div></div>
+        <div class="ar" style="--ca:var(--blue)"><div class="ad"></div><div class="an">CRISTIANO M. MATHIAS — 310 sem check</div><div class="ap" style="color:var(--blue)">310</div></div>
+        <div class="ar" style="--ca:var(--blue)"><div class="ad"></div><div class="an">RODRIGO BEHLING — 79 sem check</div><div class="ap" style="color:var(--blue)">79</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FUNIL -->
+<div class="panel" id="p-funil">
+  <div class="funil-panel">
+    <div class="fp-step"><div class="fp-left"><div class="fp-num" style="background:rgba(100,120,200,.2);color:var(--blue)">1</div><div class="fp-line"></div></div>
+      <div class="fp-body"><div class="fp-title" style="color:var(--blue)">Rotas que entram na conta</div><div class="fp-desc">Filtro: Medição Produtividade Final = SIM</div>
+        <div class="fp-bar-row"><div class="fp-bar-bg"><div class="fp-bar-fill" style="width:93.6%;background:var(--blue)"></div></div><div class="fp-nums" style="color:var(--blue)">10.293 / 11.001</div></div>
+        <div class="fp-excl">708 excluídos — rotas não produtividade</div></div></div>
+    <div class="fp-step"><div class="fp-left"><div class="fp-num" style="background:rgba(255,201,77,.2);color:var(--warn)">2</div><div class="fp-line"></div></div>
+      <div class="fp-body"><div class="fp-title" style="color:var(--warn)">Check-In E Check-Out confirmados</div><div class="fp-desc">Sem check = fora do denominador</div>
+        <div class="fp-bar-row"><div class="fp-bar-bg"><div class="fp-bar-fill" style="width:95.3%;background:var(--warn)"></div></div><div class="fp-nums" style="color:var(--warn)">9.808 / 10.293</div></div>
+        <div class="fp-excl">485 excluídos — Cristiano (310), Rodrigo (79), Paulo Andre (44)</div></div></div>
+    <div class="fp-step"><div class="fp-left"><div class="fp-num" style="background:rgba(0,229,160,.2);color:var(--ok)">3</div></div>
+      <div class="fp-body"><div class="fp-title" style="color:var(--ok)">Chegaram até as 13h — numerador</div><div class="fp-desc">Hora Chegada Cliente ≤ 13h</div>
+        <div class="fp-bar-row"><div class="fp-bar-bg"><div class="fp-bar-fill" style="width:74.8%;background:var(--ok)"></div></div><div class="fp-nums" style="color:var(--ok)">7.340 / 9.808</div></div>
+        <div class="fp-excl">2.468 chegaram após as 13h</div></div></div>
+  </div>
+  <div class="resultado-box">
+    <div class="res-pct">74,8%</div>
+    <div class="res-info"><div class="res-title">Produtividade final — lógica em cascata</div><div class="res-sub">7.340 entregas no prazo ÷ 9.808 com processo completo</div>
+      <div class="res-meta"><div class="res-meta-dot"></div><div class="res-meta-txt">+14,8pp acima da meta de 60%</div></div></div>
+  </div>
+  <div style="margin-top:18px"><div class="ct">Motoristas sem check — fora do cálculo</div>
+    <div class="sem-check-row"><div class="sc-name">CRISTIANO MATINS MATHIAS</div><div class="sc-val">310</div></div>
+    <div class="sem-check-row"><div class="sc-name">RODRIGO BEHLING</div><div class="sc-val">79</div></div>
+    <div class="sem-check-row"><div class="sc-name">PAULO ANDRE BORGES UGOSKI</div><div class="sc-val">44</div></div>
+    <div class="sem-check-row"><div class="sc-name">MATHEUS GALLO PEIXOTO</div><div class="sc-val">29</div></div>
+    <div class="sem-check-row"><div class="sc-name">MOTORISTA PX</div><div class="sc-val">15</div></div>
+  </div>
+</div>
+
+<!-- GESTORES -->
+<div class="panel" id="p-gestores">
+  <div class="kpi-grid">
+    <div class="kpi" style="--kc:var(--ok)"><div class="kpi-label">Marcos</div><div class="kpi-val" style="color:var(--ok)">76,8%</div><span class="badge b-ok">3.888 / 5.065</span></div>
+    <div class="kpi" style="--kc:var(--ok)"><div class="kpi-label">Terres</div><div class="kpi-val" style="color:var(--ok)">76,5%</div><span class="badge b-ok">1.547 / 2.021</span></div>
+    <div class="kpi" style="--kc:var(--warn)"><div class="kpi-label">Aury</div><div class="kpi-val" style="color:var(--warn)">70,0%</div><span class="badge b-m">1.905 / 2.722</span></div>
+    <div class="kpi" style="--kc:var(--muted)"><div class="kpi-label">Meta</div><div class="kpi-val" style="color:var(--muted)">60,0%</div><span class="badge b-ok">Todos acima</span></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="ct">Desempenho por gestor</div>
+      <div class="gl">
+        <div><div class="gh"><span class="gn">Marcos</span><span class="gp" style="color:var(--ok)">76,8%</span></div><div class="bt"><div class="bf" style="width:76.8%;background:var(--ok)"></div></div><div class="gd">3.888 SIM · 1.177 NÃO · 5.065 total</div></div>
+        <div><div class="gh"><span class="gn">Terres</span><span class="gp" style="color:var(--ok)">76,5%</span></div><div class="bt"><div class="bf" style="width:76.5%;background:var(--ok)"></div></div><div class="gd">1.547 SIM · 474 NÃO · 2.021 total</div></div>
+        <div><div class="gh"><span class="gn">Aury</span><span class="gp" style="color:var(--warn)">70,0%</span></div><div class="bt"><div class="bf" style="width:70%;background:var(--warn)"></div></div><div class="gd">1.905 SIM · 817 NÃO · 2.722 total</div></div>
+        <div><div class="gh"><span class="gn" style="color:var(--muted)">Meta</span><span class="gp" style="color:var(--muted)">60,0%</span></div><div class="bt"><div class="bf" style="width:60%;background:rgba(255,201,77,.3)"></div></div></div>
+      </div>
+    </div>
+    <div class="card"><div class="ct">Volume por gestor</div><div class="ch ch-220"><canvas id="gestorChart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- DIÁRIO -->
+<div class="panel" id="p-diario">
+  <div class="card" style="margin-bottom:16px"><div class="ct">% produtividade diária</div><div class="ch ch-300"><canvas id="diarioChart"></canvas></div></div>
+  <div class="grid-2">
+    <div class="card"><div class="ct">Volume diário (com check)</div><div class="ch ch-220"><canvas id="volumeChart"></canvas></div></div>
+    <div class="card"><div class="ct">Dias abaixo de 70%</div>
+      <div class="sy" style="max-height:220px">
+        <div class="ar" style="--ca:var(--warn)"><div class="ad"></div><div class="an">05/03 — 510 entregas</div><div class="ap" style="color:var(--warn)">63,7%</div></div>
+        <div class="ar" style="--ca:var(--warn)"><div class="ad"></div><div class="an">06/03 — 703 entregas</div><div class="ap" style="color:var(--warn)">69,4%</div></div>
+        <div class="ar" style="--ca:var(--warn)"><div class="ad"></div><div class="an">20/03 — 682 entregas</div><div class="ap" style="color:var(--warn)">69,6%</div></div>
+        <div class="ar" style="--ca:var(--warn)"><div class="ad"></div><div class="an">25/03 — 517 entregas</div><div class="ap" style="color:var(--warn)">66,3%</div></div>
+        <div class="ar" style="--ca:var(--warn)"><div class="ad"></div><div class="an">26/03 — 631 entregas</div><div class="ap" style="color:var(--warn)">69,4%</div></div>
+        <div class="ar" style="--ca:var(--warn)"><div class="ad"></div><div class="an">27/03 — 747 entregas</div><div class="ap" style="color:var(--warn)">67,7%</div></div>
+        <div class="ar" style="--ca:var(--warn)"><div class="ad"></div><div class="an">31/03 — 615 entregas</div><div class="ap" style="color:var(--warn)">69,9%</div></div>
+        <p style="font-size:10px;color:var(--muted);margin-top:10px">Nenhum dia abaixo da meta de 60%.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RANKING -->
+<div class="panel" id="p-ranking">
+  <div class="grid-2">
+    <div class="card"><div class="ct">Piores rotas (mín. 10 entregas)</div><div class="sy" style="max-height:380px"><table class="rt"><thead><tr><th>#</th><th>Rota</th><th>%</th><th>Total</th></tr></thead><tbody id="tb-rotas"></tbody></table></div></div>
+    <div class="card"><div class="ct">Piores motoristas (mín. 10 entregas)</div><div class="sy" style="max-height:380px"><table class="rt"><thead><tr><th>#</th><th>Motorista</th><th>%</th><th>Total</th></tr></thead><tbody id="tb-motBad"></tbody></table></div></div>
+  </div>
+  <div class="card" style="margin-top:0"><div class="ct">Melhores motoristas</div><div class="ch ch-300"><canvas id="motTopChart"></canvas></div></div>
+</div>
+
+<!-- TRANSP -->
+<div class="panel" id="p-transp">
+  <div class="card" style="margin-bottom:16px"><div class="ct">Produtividade por transportador</div><div class="ch ch-360"><canvas id="transpChart"></canvas></div></div>
+  <div class="card"><div class="ct">Tabela completa</div><table class="rt"><thead><tr><th>#</th><th>Transportador</th><th>% Produtividade</th><th>SIM</th><th>Total</th></tr></thead><tbody id="tb-transp"></tbody></table></div>
+</div>
+
+<!-- RELATÓRIO EXECUTIVO -->
+<div class="panel" id="p-email">
+  <div class="email-toolbar">
+    <h2>Relatório Executivo — pronto para copiar e enviar por e-mail</h2>
+    <div class="toolbar-btns">
+      <button class="btn-copy" onclick="copiarEmail(this)">⬇ Copiar relatório</button>
+    </div>
+  </div>
+
+  <div class="email-preview" id="emailBlock">
+
+    <!-- Cabeçalho -->
+    <div class="ep-header">
+      <div class="ep-logo">
+        <div class="ep-logo-box"><span>P</span></div>
+        <div class="ep-logo-text">
+          <h1>Relatório de Produtividade Logística</h1>
+          <p>SISTEMA FUSION · ENTREGAS ATÉ 13H · MARÇO 2026</p>
+        </div>
+      </div>
+      <div class="ep-header-right">
+        <div class="ep-mes">MARÇO / 2026</div>
+        <div class="ep-data">Meta: 60% · Gerado pelo painel de produtividade</div>
+      </div>
+    </div>
+
+    <div class="ep-body">
+
+      <!-- Hero resultado -->
+      <div class="ep-hero">
+        <div class="ep-hero-pct">74,8%</div>
+        <div class="ep-hero-divider"></div>
+        <div class="ep-hero-info">
+          <h2>Produtividade de Entregas até 13h — Março/2026</h2>
+          <p>7.340 entregas realizadas até as 13h de um total de 9.808 com processo completo de Check-In e Check-Out confirmados.</p>
+          <div class="ep-hero-badges">
+            <span class="ep-badge ep-badge-ok">✔ Acima da meta de 60%</span>
+            <span class="ep-badge ep-badge-warn">+14,8 pp acima da meta</span>
+            <span class="ep-badge ep-badge-info">485 sem check — plano de ação em andamento</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="ep-section">
+        <div class="ep-section-title">Indicadores principais</div>
+        <div class="ep-kpi-grid">
+          <div class="ep-kpi" style="--ep-c:#00c878">
+            <div class="ep-kpi-label">% Produtividade</div>
+            <div class="ep-kpi-val" style="color:#00915a">74,8%</div>
+            <div class="ep-kpi-sub">Meta: 60,0%</div>
+          </div>
+          <div class="ep-kpi" style="--ep-c:#00c878">
+            <div class="ep-kpi-label">Entregas até 13h</div>
+            <div class="ep-kpi-val" style="color:#1a2332">7.340</div>
+            <div class="ep-kpi-sub">SIM no prazo</div>
+          </div>
+          <div class="ep-kpi" style="--ep-c:#e74c3c">
+            <div class="ep-kpi-label">Fora do prazo</div>
+            <div class="ep-kpi-val" style="color:#c0392b">2.468</div>
+            <div class="ep-kpi-sub">Após as 13h</div>
+          </div>
+          <div class="ep-kpi" style="--ep-c:#7090e0">
+            <div class="ep-kpi-label">Sem check completo</div>
+            <div class="ep-kpi-val" style="color:#5060c0">485</div>
+            <div class="ep-kpi-sub">Fora do cálculo</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gestores -->
+      <div class="ep-section">
+        <div class="ep-section-title">Desempenho por gestor</div>
+        <div class="ep-gestores">
+          <div class="ep-gest">
+            <div class="ep-gest-nome">Gestor Marcos</div>
+            <div class="ep-gest-pct" style="color:#00915a">76,8%</div>
+            <div class="ep-gest-det">3.888 SIM · 5.065 total</div>
+            <div class="ep-gest-bar"><div class="ep-gest-bar-fill" style="width:76.8%;background:#00c878"></div></div>
+          </div>
+          <div class="ep-gest">
+            <div class="ep-gest-nome">Gestor Terres</div>
+            <div class="ep-gest-pct" style="color:#00915a">76,5%</div>
+            <div class="ep-gest-det">1.547 SIM · 2.021 total</div>
+            <div class="ep-gest-bar"><div class="ep-gest-bar-fill" style="width:76.5%;background:#00c878"></div></div>
+          </div>
+          <div class="ep-gest">
+            <div class="ep-gest-nome">Gestor Aury</div>
+            <div class="ep-gest-pct" style="color:#b07800">70,0%</div>
+            <div class="ep-gest-det">1.905 SIM · 2.722 total</div>
+            <div class="ep-gest-bar"><div class="ep-gest-bar-fill" style="width:70%;background:#ffb400"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficos -->
+      <div class="ep-section">
+        <div class="ep-section-title">Evolução diária e distribuição</div>
+        <div class="ep-charts">
+          <div class="ep-chart-box">
+            <div class="ep-chart-title">% Produtividade diária — março/2026</div>
+            <div class="ep-chart-wrap"><canvas id="emailDiarioChart"></canvas></div>
+          </div>
+          <div class="ep-chart-box">
+            <div class="ep-chart-title">Produtividade por gestor</div>
+            <div class="ep-chart-wrap"><canvas id="emailGestorChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rotas críticas -->
+      <div class="ep-section">
+        <div class="ep-section-title">Rotas críticas — abaixo da meta de 60%</div>
+        <table class="ep-table">
+          <thead><tr><th>Rota</th><th>Total</th><th style="min-width:160px">% Produtividade</th><th>Situação</th></tr></thead>
+          <tbody id="ep-rotas"></tbody>
+        </table>
+      </div>
+
+      <!-- Motoristas críticos -->
+      <div class="ep-section">
+        <div class="ep-section-title">Motoristas críticos — abaixo de 60%</div>
+        <table class="ep-table">
+          <thead><tr><th>Motorista</th><th>Total</th><th style="min-width:160px">% Produtividade</th><th>Situação</th></tr></thead>
+          <tbody id="ep-motoristas"></tbody>
+        </table>
+      </div>
+
+
+      <!-- Programa de Excelência -->
+      <div class="ep-section">
+        <div class="ep-section-title">⭐ Destaque — Candidatos ao Programa de Excelência</div>
+        <div style="background:#f0faf5;border:1px solid #b8ead4;border-radius:8px;padding:14px 16px;margin-bottom:14px;font-family:sans-serif;">
+          <p style="font-size:11px;color:#1a6644;font-weight:600;margin-bottom:4px;">Critério atual: Resultado de produtividade positivo (Hora chegada ≤ 13h)</p>
+          <p style="font-size:10px;color:#5a9070;">Motoristas com mínimo de 10 entregas no período, ordenados por % de produtividade.</p>
+        </div>
+
+        <!-- Tier Ouro: ≥ 90% -->
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <div style="background:#d4af37;color:#fff;font-size:9px;font-weight:800;padding:3px 10px;border-radius:10px;font-family:sans-serif;letter-spacing:1px;">OURO · ≥ 90%</div>
+            <div style="flex:1;height:1px;background:#e4e8f0;"></div>
+          </div>
+          <table class="ep-table">
+            <thead><tr><th>#</th><th>Motorista</th><th>Entregas</th><th style="min-width:160px">% Produtividade</th><th>Destaque</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td><strong>LEONARDO MARTINS DA PAZ</strong></td><td style="color:#5a7090">182</td><td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:98.4%;background:#00c878"></div></div><span class="ep-pct-val" style="color:#00915a">98,4%</span></div></td><td><span class="ep-pill ep-pill-ok">⭐ Excelência</span></td></tr>
+              <tr><td>2</td><td><strong>ISRAEL DA SILVA PAKULSKI</strong></td><td style="color:#5a7090">356</td><td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:97.8%;background:#00c878"></div></div><span class="ep-pct-val" style="color:#00915a">97,8%</span></div></td><td><span class="ep-pill ep-pill-ok">⭐ Excelência</span></td></tr>
+              <tr><td>3</td><td><strong>VINICIUS COSTAS DA ROSA</strong></td><td style="color:#5a7090">387</td><td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:96.9%;background:#00c878"></div></div><span class="ep-pct-val" style="color:#00915a">96,9%</span></div></td><td><span class="ep-pill ep-pill-ok">⭐ Excelência</span></td></tr>
+              <tr><td>4</td><td><strong>GABRIEL BARCELOS CORREA</strong></td><td style="color:#5a7090">31</td><td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:96.8%;background:#00c878"></div></div><span class="ep-pct-val" style="color:#00915a">96,8%</span></div></td><td><span class="ep-pill ep-pill-ok">⭐ Excelência</span></td></tr>
+              <tr><td>5</td><td><strong>JOSE FERNANDO BIAJONI ALLEND</strong></td><td style="color:#5a7090">383</td><td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:92.7%;background:#00c878"></div></div><span class="ep-pct-val" style="color:#00915a">92,7%</span></div></td><td><span class="ep-pill ep-pill-ok">⭐ Excelência</span></td></tr>
+              <tr><td>6</td><td><strong>EDUARDO TEIXEIRA TITOW</strong></td><td style="color:#5a7090">62</td><td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:91.9%;background:#00c878"></div></div><span class="ep-pct-val" style="color:#00915a">91,9%</span></div></td><td><span class="ep-pill ep-pill-ok">⭐ Excelência</span></td></tr>
+              <tr><td>7</td><td><strong>RAMIRO JORDAN REGINALDO SANTOS</strong></td><td style="color:#5a7090">302</td><td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:90.7%;background:#00c878"></div></div><span class="ep-pct-val" style="color:#00915a">90,7%</span></div></td><td><span class="ep-pill ep-pill-ok">⭐ Excelência</span></td></tr>
+              <tr><td>8</td><td><strong>CALEU SCHNEIDER</strong></td><td style="color:#5a7090">287</td><td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:90.2%;background:#00c878"></div></div><span class="ep-pct-val" style="color:#00915a">90,2%</span></div></td><td><span class="ep-pill ep-pill-ok">⭐ Excelência</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Tier Prata: 85-90% -->
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <div style="background:#8fa3b8;color:#fff;font-size:9px;font-weight:800;padding:3px 10px;border-radius:10px;font-family:sans-serif;letter-spacing:1px;">PRATA · 85% – 90%</div>
+            <div style="flex:1;height:1px;background:#e4e8f0;"></div>
+          </div>
+          <table class="ep-table">
+            <thead><tr><th>#</th><th>Motorista</th><th>Entregas</th><th style="min-width:160px">% Produtividade</th><th>Destaque</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>DIEGO DA SILVA FERRAZ</td><td style="color:#5a7090">359</td><td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:87.7%;background:#52a882"></div></div><span class="ep-pct-val" style="color:#3a7a5a">87,7%</span></div></td><td><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#eef4ff;color:#5060c0;">🥈 Destaque</span></td></tr>
+              <tr><td>2</td><td>BRUNO CORREIA DA ROSA</td><td style="color:#5a7090">389</td><td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:87.7%;background:#52a882"></div></div><span class="ep-pct-val" style="color:#3a7a5a">87,7%</span></div></td><td><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#eef4ff;color:#5060c0;">🥈 Destaque</span></td></tr>
+              <tr><td>3</td><td>CELSO TIMOTEO</td><td style="color:#5a7090">163</td><td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:87.7%;background:#52a882"></div></div><span class="ep-pct-val" style="color:#3a7a5a">87,7%</span></div></td><td><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#eef4ff;color:#5060c0;">🥈 Destaque</span></td></tr>
+              <tr><td>4</td><td>LUCAS BITTENCOURT</td><td style="color:#5a7090">329</td><td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:85.4%;background:#52a882"></div></div><span class="ep-pct-val" style="color:#3a7a5a">85,4%</span></div></td><td><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#eef4ff;color:#5060c0;">🥈 Destaque</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Nota -->
+        <div style="background:#f8f9fc;border-radius:6px;padding:10px 14px;font-family:sans-serif;">
+          <p style="font-size:10px;color:#8fa3b8;">* Volume mínimo de 10 entregas no período. Os critérios do programa de excelência serão definidos pela gestão. Este ranking serve como base de referência para o lançamento do programa.</p>
+        </div>
+      </div>
+
+      <!-- Alerta sem check -->
+      <div class="ep-alert-box">
+        <div class="ep-alert-title">⚠ Alerta — Motoristas sem Check-In/Out (485 cargas fora do cálculo)</div>
+        <div class="ep-alert-row"><span class="ep-alert-name">CRISTIANO MATINS MATHIAS</span><span class="ep-alert-n">310 cargas sem check</span></div>
+        <div class="ep-alert-row"><span class="ep-alert-name">RODRIGO BEHLING</span><span class="ep-alert-n">79 cargas sem check</span></div>
+        <div class="ep-alert-row"><span class="ep-alert-name">PAULO ANDRE BORGES UGOSKI</span><span class="ep-alert-n">44 cargas sem check</span></div>
+        <div class="ep-alert-row"><span class="ep-alert-name">MATHEUS GALLO PEIXOTO</span><span class="ep-alert-n">29 cargas sem check</span></div>
+        <div class="ep-alert-row"><span class="ep-alert-name">MOTORISTA PX</span><span class="ep-alert-n">15 cargas sem check</span></div>
+        <div style="margin-top:10px;font-size:10px;color:#8a5a20;font-family:sans-serif">Plano de ação individual elaborado pelo supervisor. Motoristas convocados para alinhamento de processo.</div>
+      </div>
+
+    </div><!-- ep-body -->
+
+    <!-- Rodapé -->
+    <div class="ep-footer">
+      <p>Sistema Fusion · Período: Março/2026 · Meta: 60% · Metodologia: Rota válida → Check-In/Out → Hora ≤ 13h</p>
+      <div class="ep-footer-meta"><p style="color:#00c878;font-weight:700">74,8% · ACIMA DA META</p></div>
+    </div>
+
+  </div><!-- email-preview -->
+  <p style="font-size:10px;color:var(--muted);text-align:center;margin-top:10px">Clique em "Copiar relatório" para copiar o conteúdo formatado, ou use Ctrl+A / Cmd+A dentro do bloco acima para selecionar tudo.</p>
+</div>
+
+</main>
+<script>
+const C={ok:'#00e5a0',w:'#ffc94d',d:'#ff6b6b',b:'#6478c8',m:'#636880'};
+function bc(p){return p<60?C.d:p<75?C.w:C.ok;}
+function bcEp(p){return p<60?'#c0392b':p<75?'#b07800':'#00915a';}
+function bcEpFill(p){return p<60?'#e74c3c':p<75?'#ffb400':'#00c878';}
+function pill(p){
+  if(p<60) return '<span class="ep-pill ep-pill-bad">Crítico</span>';
+  if(p<75) return '<span class="ep-pill ep-pill-warn">Atenção</span>';
+  return '<span class="ep-pill ep-pill-ok">OK</span>';
+}
+
+const D={
+  gestores:[{n:'Marcos',t:5065,s:3888,p:76.8},{n:'Terres',t:2021,s:1547,p:76.5},{n:'Aury',t:2722,s:1905,p:70.0}],
+  diario:[
+    {d:'02/03',t:100,p:84.0},{d:'03/03',t:383,p:84.6},{d:'04/03',t:504,p:75.0},
+    {d:'05/03',t:510,p:63.7},{d:'06/03',t:703,p:69.4},{d:'07/03',t:17,p:94.1},
+    {d:'09/03',t:86,p:91.9},{d:'10/03',t:394,p:82.0},{d:'11/03',t:499,p:81.4},
+    {d:'12/03',t:568,p:78.3},{d:'13/03',t:684,p:76.0},{d:'14/03',t:21,p:95.2},
+    {d:'16/03',t:110,p:97.3},{d:'17/03',t:409,p:80.9},{d:'18/03',t:411,p:81.0},
+    {d:'19/03',t:493,p:81.5},{d:'20/03',t:682,p:69.6},{d:'21/03',t:22,p:100},
+    {d:'23/03',t:100,p:86.0},{d:'24/03',t:410,p:76.8},{d:'25/03',t:517,p:66.3},
+    {d:'26/03',t:631,p:69.4},{d:'27/03',t:747,p:67.7},{d:'28/03',t:21,p:90.5},
+    {d:'30/03',t:171,p:73.1},{d:'31/03',t:615,p:69.9}
+  ],
+  rotasBad:[
+    {n:'20 - POA Rota Noturna',t:16,p:31.2},{n:'Rota 63 - Caxias I',t:41,p:34.1},
+    {n:'24 - Bagé (2 dias)',t:249,p:41.8},{n:'11 - Serra - Caxias do Sul',t:325,p:53.5},
+    {n:'29 - São Lourenço do Sul',t:251,p:53.8},{n:'27 - Sul - Chuí',t:171,p:57.3},
+    {n:'4 - Met. - Canoas',t:413,p:61.0},{n:'30 - São José do Norte',t:259,p:64.5},
+    {n:'26 - Sul - Canguçu',t:185,p:65.4},{n:'7 - Litoral',t:786,p:65.9}
+  ],
+  motBad:[
+    {n:'DAVI NUNES DA SILVA',t:28,p:25.0},{n:'CRISTIANO M. MATHIAS',t:91,p:31.9},
+    {n:'WILLIAN DE O. RODRIGUES',t:182,p:36.8},{n:'MOTORISTA PX',t:28,p:39.3},
+    {n:'WAGNER DIAS GODOY',t:102,p:41.2},{n:'ROBERTO ROSSA',t:178,p:45.5},
+    {n:'GUILHERME ALVEZ DINIZ',t:46,p:45.7},{n:'OZIEL DE SOUZA DA ROSA',t:262,p:46.2},
+    {n:'DENZEL DA SILVEIRA CUNHA',t:176,p:48.9},{n:'MATHEUS GALLO PEIXOTO',t:380,p:51.1},
+    {n:'DANIEL Z. STAEHLER',t:360,p:52.5},{n:'ERIC SOUZA DOS SANTOS',t:92,p:56.5},
+    {n:'CLEBER F. MASSEN',t:196,p:57.7},{n:'JAIR ROZA DA SILVA',t:167,p:58.1},
+    {n:'DIEGO FERRARI BUTTE',t:170,p:65.9}
+  ],
+  motTop:[
+    {n:'LEONARDO MARTINS DA PAZ',t:182,p:98.4},{n:'ISRAEL DA SILVA PAKULSKI',t:356,p:97.8},
+    {n:'VINICIUS COSTAS DA ROSA',t:387,p:96.9},{n:'GABRIEL B. CORREA',t:31,p:96.8},
+    {n:'JOSE F. BIAJONI ALLEND',t:383,p:92.7},{n:'EDUARDO T. TITOW',t:62,p:91.9},
+    {n:'RAMIRO J. REGINALDO',t:302,p:90.7},{n:'CALEU SCHNEIDER',t:287,p:90.2}
+  ],
+  transp:[
+    {n:'Vettore',t:27,s:10,p:37.0},{n:'Jair',t:804,s:413,p:51.4},
+    {n:'Jonas',t:626,s:368,p:58.8},{n:'Ramos',t:490,s:309,p:63.1},
+    {n:'Wagner Godoy',t:611,s:410,p:67.1},{n:'Libanio',t:1183,s:811,p:68.6},
+    {n:'Breno Soto',t:139,s:104,p:74.8},{n:'Bruno Fonfonka',t:2063,s:1546,p:74.9},
+    {n:'João ZS',t:280,s:212,p:75.7},{n:'Milton',t:145,s:114,p:78.6},
+    {n:'Rodrigo Brisola',t:363,s:294,p:81.0},{n:'Leonardo Leite',t:159,s:130,p:81.8},
+    {n:'Diego MEU',t:816,s:671,p:82.2},{n:'Wagner Borges',t:329,s:274,p:83.3},
+    {n:'Celso',t:163,s:143,p:87.7},{n:'Fernando/Sadia',t:383,s:355,p:92.7},
+    {n:'Richard',t:484,s:453,p:93.6},{n:'Vinicius',t:387,s:375,p:96.9},
+    {n:'Israel',t:356,s:348,p:97.8}
+  ]
+};
+
+// Tabelas dashboard
+function row(r,i){return`<tr><td class="rn">${i+1}</td><td>${r.n}</td><td><div class="bw"><div class="mb"><div class="mf" style="width:${r.p}%;background:${bc(r.p)}"></div></div><span class="rp" style="color:${bc(r.p)}">${r.p.toFixed(1)}%</span></div></td><td class="rtot">${r.t}</td></tr>`;}
+document.getElementById('tb-rotas').innerHTML=D.rotasBad.map(row).join('');
+document.getElementById('tb-motBad').innerHTML=D.motBad.map(row).join('');
+document.getElementById('tb-transp').innerHTML=D.transp.map((r,i)=>`<tr><td class="rn">${i+1}</td><td>${r.n}</td><td><div class="bw"><div class="mb"><div class="mf" style="width:${r.p}%;background:${bc(r.p)}"></div></div><span class="rp" style="color:${bc(r.p)}">${r.p.toFixed(1)}%</span></div></td><td class="rtot">${r.s}</td><td class="rtot">${r.t}</td></tr>`).join('');
+
+// Tabelas email
+document.getElementById('ep-rotas').innerHTML=D.rotasBad.map((r,i)=>`<tr>
+  <td>${r.n}</td><td style="color:#5a7090">${r.t}</td>
+  <td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:${r.p}%;background:${bcEpFill(r.p)}"></div></div>
+  <span class="ep-pct-val" style="color:${bcEp(r.p)}">${r.p.toFixed(1)}%</span></div></td>
+  <td>${pill(r.p)}</td></tr>`).join('');
+document.getElementById('ep-motoristas').innerHTML=D.motBad.map((r,i)=>`<tr>
+  <td>${r.n}</td><td style="color:#5a7090">${r.t}</td>
+  <td><div class="ep-bar-row"><div class="ep-bar-bg"><div class="ep-bar-fill" style="width:${r.p}%;background:${bcEpFill(r.p)}"></div></div>
+  <span class="ep-pct-val" style="color:${bcEp(r.p)}">${r.p.toFixed(1)}%</span></div></td>
+  <td>${pill(r.p)}</td></tr>`).join('');
+
+// TABS
+function showTab(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('p-'+id).classList.add('active');
+  el.classList.add('active');
+  render(id);
+}
+
+const charts={};
+const tt={backgroundColor:'#13161e',titleColor:'#e8eaf0',bodyColor:'#636880',borderColor:'rgba(255,255,255,0.07)',borderWidth:1};
+const ttLight={backgroundColor:'#ffffff',titleColor:'#1a2332',bodyColor:'#5a7090',borderColor:'rgba(0,0,0,0.08)',borderWidth:1,padding:10};
+const sc={x:{ticks:{color:'#636880',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#636880',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}}};
+const scLight={x:{ticks:{color:'#8fa3b8',font:{size:9}},grid:{color:'rgba(0,0,0,0.04)'}},y:{min:0,max:105,ticks:{color:'#8fa3b8',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.04)'}}};
+
+function render(id){
+  if(id==='gestores'&&!charts.g){
+    charts.g=new Chart(document.getElementById('gestorChart'),{type:'doughnut',
+      data:{labels:D.gestores.map(g=>g.n),datasets:[{data:D.gestores.map(g=>g.t),backgroundColor:[C.ok,C.ok,C.w],borderWidth:0}]},
+      options:{plugins:{legend:{display:true,position:'bottom',labels:{color:'#636880',font:{size:10}}},tooltip:tt},cutout:'65%'}});
+  }
+  if(id==='diario'&&!charts.d){
+    const lbl=D.diario.map(d=>d.d),pcts=D.diario.map(d=>d.p);
+    charts.d=new Chart(document.getElementById('diarioChart'),{type:'line',
+      data:{labels:lbl,datasets:[
+        {data:pcts,borderColor:C.ok,backgroundColor:'rgba(0,229,160,0.07)',fill:true,tension:0.35,pointBackgroundColor:pcts.map(p=>bc(p)),pointRadius:4,pointHoverRadius:6},
+        {data:lbl.map(()=>60),borderColor:'rgba(255,201,77,0.4)',borderDash:[5,4],pointRadius:0,fill:false}
+      ]},
+      options:{plugins:{legend:{display:false},tooltip:tt},
+        scales:{x:{ticks:{color:'#636880',font:{size:8}},grid:{color:'rgba(255,255,255,0.04)'}},
+          y:{min:0,max:105,ticks:{color:'#636880',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+    charts.v=new Chart(document.getElementById('volumeChart'),{type:'bar',
+      data:{labels:lbl,datasets:[{data:D.diario.map(d=>d.t),backgroundColor:'rgba(99,104,128,0.4)',borderRadius:3}]},
+      options:{plugins:{legend:{display:false},tooltip:tt},scales:sc}});
+  }
+  if(id==='ranking'&&!charts.mt){
+    const top=[...D.motTop].sort((a,b)=>a.p-b.p);
+    charts.mt=new Chart(document.getElementById('motTopChart'),{type:'bar',
+      data:{labels:top.map(m=>m.n),datasets:[{data:top.map(m=>m.p),backgroundColor:top.map(m=>bc(m.p)),borderRadius:5}]},
+      options:{plugins:{legend:{display:false},tooltip:tt},indexAxis:'y',
+        scales:{x:{min:0,max:105,ticks:{color:'#636880',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}},
+          y:{ticks:{color:'#e8eaf0',font:{size:10}},grid:{display:false}}}}});
+  }
+  if(id==='transp'&&!charts.tr){
+    const s=[...D.transp].sort((a,b)=>a.p-b.p);
+    charts.tr=new Chart(document.getElementById('transpChart'),{type:'bar',
+      data:{labels:s.map(t=>t.n),datasets:[{data:s.map(t=>t.p),backgroundColor:s.map(t=>bc(t.p)),borderRadius:5}]},
+      options:{plugins:{legend:{display:false},tooltip:{...tt,callbacks:{label:ctx=>` ${ctx.raw.toFixed(1)}% · ${s[ctx.dataIndex].t} entregas`}}},
+        indexAxis:'y',scales:{x:{min:0,max:105,ticks:{color:'#636880',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}},
+          y:{ticks:{color:'#e8eaf0',font:{size:10}},grid:{display:false}}}}});
+  }
+  if(id==='email'&&!charts.ed){
+    const lbl=D.diario.map(d=>d.d),pcts=D.diario.map(d=>d.p);
+    charts.ed=new Chart(document.getElementById('emailDiarioChart'),{type:'line',
+      data:{labels:lbl,datasets:[
+        {data:pcts,borderColor:'#00c878',backgroundColor:'rgba(0,200,120,0.08)',fill:true,tension:0.35,
+          pointBackgroundColor:pcts.map(p=>bcEpFill(p)),pointRadius:3,pointHoverRadius:5,borderWidth:2},
+        {data:lbl.map(()=>60),borderColor:'rgba(255,180,0,0.5)',borderDash:[5,4],pointRadius:0,fill:false,borderWidth:1.5}
+      ]},
+      options:{plugins:{legend:{display:false},tooltip:ttLight},
+        scales:{x:{ticks:{color:'#8fa3b8',font:{size:7}},grid:{color:'rgba(0,0,0,0.04)'}},
+          y:{min:0,max:105,ticks:{color:'#8fa3b8',font:{size:8},callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}}}}});
+    charts.eg=new Chart(document.getElementById('emailGestorChart'),{type:'bar',
+      data:{labels:['Marcos','Terres','Aury'],
+        datasets:[{data:[76.8,76.5,70.0],backgroundColor:['#00c878','#00c878','#ffb400'],borderRadius:6,borderSkipped:false,label:'% Produtividade'}]},
+      options:{
+        plugins:{
+          legend:{display:false},
+          tooltip:{...ttLight,callbacks:{label:ctx=>' '+ctx.raw.toFixed(1)+'%'}},
+          annotation:{
+            annotations:{
+              metaLine:{type:'line',yMin:60,yMax:60,borderColor:'rgba(255,180,0,0.7)',borderWidth:2,borderDash:[6,4],
+                label:{content:'Meta 60%',display:true,position:'end',backgroundColor:'rgba(255,180,0,0.15)',color:'#b07800',font:{size:10,weight:'bold'},padding:{x:8,y:4},borderRadius:4}}
+            }
+          }
+        },
+        scales:{x:{ticks:{color:'#8fa3b8',font:{size:11}},grid:{display:false}},
+          y:{min:0,max:100,ticks:{color:'#8fa3b8',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}}}}});
+  }
+}
+
+// Copiar email
+function copiarEmail(btn){
+  const el=document.getElementById('emailBlock');
+  const sel=window.getSelection();
+  const range=document.createRange();
+  range.selectNodeContents(el);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  try{
+    document.execCommand('copy');
+    btn.textContent='✔ Copiado!';
+    btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='⬇ Copiar relatório';btn.classList.remove('copied');},2500);
+  }catch(e){
+    navigator.clipboard.writeText(el.innerText).then(()=>{
+      btn.textContent='✔ Copiado!';btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent='⬇ Copiar relatório';btn.classList.remove('copied');},2500);
+    });
+  }
+  sel.removeAllRanges();
+}
+</script>
+</body>
+</html>
